@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>London Job Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky filter bar over a single column of role cards (two columns on wide screens) */
+:root{
+  --bg:#f3f5f2; --surface:#ffffff; --fg:#17201c; --muted:#5d6b64; --line:#dde3de;
+  --accent:#1f5c4a; --accent-soft:#e2eee8; --warn:#9a5a00; --warn-soft:#fbefd9;
+  --hot:#7a2e4a; --hot-soft:#f5e3ea; --ok:#2d6a3e; --ok-soft:#e1f0e4;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111613; --surface:#1a211d; --fg:#e6ece8; --muted:#9aa8a1; --line:#2b3530;
+  --accent:#7cc4a8; --accent-soft:#1f3229; --warn:#f0b75e; --warn-soft:#3a2c14;
+  --hot:#e79ab6; --hot-soft:#3a2230; --ok:#8fd19e; --ok-soft:#1d3323; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111613; --surface:#1a211d; --fg:#e6ece8; --muted:#9aa8a1; --line:#2b3530;
+  --accent:#7cc4a8; --accent-soft:#1f3229; --warn:#f0b75e; --warn-soft:#3a2c14;
+  --hot:#e79ab6; --hot-soft:#3a2230; --ok:#8fd19e; --ok-soft:#1d3323; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+header h1{font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,4vw,2.2rem);margin:0;text-wrap:balance;letter-spacing:-.01em}
+header p{margin:.35rem 0 0;color:var(--muted);max-width:65ch}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.9rem;color:var(--muted)}
+.stat b{font-family:var(--display);font-size:1.25rem;color:var(--fg);margin-right:4px;font-variant-numeric:tabular-nums}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px;margin-top:16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.search{width:100%;box-sizing:border-box;font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.search:focus-visible,.chip:focus-visible,.apply:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chip{flex:none;font:inherit;font-size:.88rem;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+select{font:inherit;font-size:.9rem;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.count{margin-left:auto;font-variant-numeric:tabular-nums}
+.flabel{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:-4px}
+.reset{font:inherit;font-size:.85rem;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--accent);cursor:pointer}
+.reset:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#co{max-width:100%}
+.list{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+@media (min-width:820px){.list{grid-template-columns:1fr 1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.co{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.role{font-family:var(--display);font-weight:500;font-size:1.12rem;line-height:1.25;margin:2px 0 0;overflow-wrap:anywhere}
+.new{flex:none;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--hot-soft);color:var(--hot);padding:3px 8px;border-radius:999px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:.8rem;padding:2px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.sal{font-size:.8rem;padding:2px 8px;border-radius:6px;font-variant-numeric:tabular-nums}
+.sal.below{background:var(--warn-soft);color:var(--warn)}
+.sal.above{background:var(--hot-soft);color:var(--hot)}
+.sal.in{background:var(--ok-soft);color:var(--ok)}
+.sal.na{background:transparent;color:var(--muted);border:1px dashed var(--line)}
+.note{margin:0;font-size:.93rem;color:var(--fg);overflow-wrap:anywhere}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+.dates{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.apply{font-weight:600;font-size:.9rem;text-decoration:none;padding:7px 14px;border-radius:8px;background:var(--accent);color:var(--bg)}
+.apply.weak{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+details{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+.rm{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px}
+.rm li{font-size:.9rem;border-top:1px solid var(--line);padding-top:8px;overflow-wrap:anywhere}
+.rm span{color:var(--muted)}
+.legend{font-size:.85rem;color:var(--muted);margin-top:10px}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--accent)}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <h1>London job board</h1>
+  <p>Roles posted in the last month at your target companies and beyond, from the daily career-site scan and the LinkedIn scan. Roles with no posting date are listed under "Hidden" at the bottom. Snapshot of the tracker on 30 Oct 2026.</p>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="bar">
+  <input id="q" class="search" type="search" placeholder="Search company, role or note" aria-label="Search roles">
+  <span class="flabel" id="fnLabel">Function</span>
+  <div class="chips" id="chips" role="group" aria-labelledby="fnLabel"></div>
+  <div class="row2">
+    <label for="ind">Industry</label>
+    <select id="ind"></select>
+    <label for="co">Company</label>
+    <select id="co"></select>
+    <label for="sal">Salary</label>
+    <select id="sal">
+      <option value="all">All</option>
+      <option value="in">In £65k–£85k range</option>
+      <option value="notbelow">Hide below-target</option>
+      <option value="above">Above target</option>
+      <option value="listed">Salary shown only</option>
+    </select>
+    <label for="src">Source</label>
+    <select id="src">
+      <option value="all">All</option>
+      <option value="career">Career sites</option>
+      <option value="linkedin">LinkedIn</option>
+    </select>
+    <label for="post">Posted</label>
+    <select id="post">
+      <option value="any">Any time</option>
+      <option value="1">Past 24 hours</option>
+      <option value="3">Past 3 days</option>
+      <option value="7">Past week</option>
+      <option value="14">Past 2 weeks</option>
+      <option value="30">Past month</option>
+    </select>
+    <button class="reset" type="button" id="reset">Clear filters</button>
+    <span class="count" id="count"></span>
+  </div>
+</div>
+
+<div class="list" id="list"></div>
+<p class="legend">Green salary = inside your £65k–£85k target. Amber = below. Pink = above. "Glassdoor est." means an estimate, not the employer's figure. A solid button opens the employer or LinkedIn page; an outlined one opens a mirror or search page.</p>
+
+<details open>
+  <summary id="apSum">Applied</summary>
+  <ul class="rm" id="ap"></ul>
+</details>
+
+<details>
+  <summary id="hdSum">Hidden</summary>
+  <ul class="rm" id="hd"></ul>
+</details>
+
+<details>
+  <summary id="rmSum">Removed roles</summary>
+  <ul class="rm" id="rm"></ul>
+</details>
+</div>
+
+<script>
+const TODAY="2026-10-30";
+// [firstSeen, lastSeen, company, role, category, salary, fitNote, linkType(A=Apply,M=mirror,S=search), url]
+const ROLES=[
+["2026-10-30", "2026-10-30", "Anthropic", "Customer Success Manager, Beneficial Deployments EMEA", "Customer success", "n/a", "AI target employer; customer success for Anthropic's beneficial-deployments work — strong AI-adoption pivot fit; Anthropic's other London CSM role lists £135k–£165k so pay may be above target; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484827779/"],
+["2026-10-30", "2026-10-30", "L'Oréal", "Global Customer Enablement Manager (FTC until 31/12/2027)", "Customer success", "n/a", "Former employer; customer enablement — check whether CRM/adoption or trade-customer scope; fixed-term to end 2027; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484175358/"],
+["2026-10-30", "2026-10-30", "Marks and Spencer", "Analytics Manager", "Data/BI", "n/a", "Major UK retailer analytics manager — retail + analytics fit at Manager grade; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484979781/"],
+["2026-10-30", "2026-10-30", "Wise", "Senior CRM Manager - Advocacy", "CRM", "n/a", "Senior CRM role at fintech; may lean lifecycle/advocacy marketing; Wise's Regional CRM Manager listed £45k–£65k so check pay; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4456206319/"],
+["2026-10-30", "2026-10-30", "White & Case LLP", "Change Manager, Practice Solutions", "Change/Transformation", "n/a", "Change manager for law-firm practice technology — change/adoption fit; legal sector; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4443906023/"],
+["2026-10-30", "2026-10-30", "Moorhouse", "Management Consultant - Senior Consultant - People & Change", "Change/Transformation", "n/a", "People & change consulting at transformation consultancy; Senior Consultant grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4467762251/"],
+["2026-10-30", "2026-10-30", "Gartner", "Senior Consultant: Technology Enabled Transformation", "Change/Transformation", "n/a", "Tech-enabled transformation consulting — transformation pivot fit; check grade/pay; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4476210296/"],
+["2026-10-30", "2026-10-30", "Celonis", "Applied Value Engineer - AI and Value Transformation Consultant", "AI adoption", "n/a", "Process-mining/AI vendor value & transformation consulting — AI pivot fit; \"engineer\" title may mean technical depth; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483030876/"],
+["2026-10-30", "2026-10-30", "Atlassian", "Customer Success Architect (AI), EMEA", "Customer success", "n/a", "AI adoption with enterprise customers at SaaS company; \"architect\" may be technical; remote; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4468250312/"],
+["2026-10-30", "2026-10-30", "Avanade", "Delivery Manager - Client Success", "Customer success", "n/a", "Client success delivery at Microsoft/Accenture JV consultancy — Microsoft stack fit; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4485230211/"],
+["2026-10-30", "2026-10-30", "PA Consulting", "Managing Consultant - FS - AI", "AI adoption", "n/a", "AI consulting at Managing Consultant grade; FS sector gap; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4390143327/"],
+["2026-10-30", "2026-10-30", "Turner & Townsend", "Digital Advisory Consultant, Data Strategy (Consultant/Senior Consultant)", "Data/BI", "n/a", "Data strategy advisory; Consultant grade may be below £65k; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4477132548/"],
+["2026-10-30", "2026-10-30", "Archer", "Data & AI Strategy - Consultant", "AI adoption", "n/a", "Data & AI strategy consulting; Consultant grade may be below £65k; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484829150/"],
+["2026-10-30", "2026-10-30", "Archer", "Analytics & Data Insight Consultant", "Data/BI", "n/a", "Analytics & insight consulting; on-site; grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484824296/"],
+["2026-10-30", "2026-10-30", "Vantage Point Global", "Risk Transformation Consultant – Financial Services Consulting Programme", "Change/Transformation", "n/a", "Transformation consulting programme; FS risk domain gap; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4467190915/"],
+["2026-10-30", "2026-10-30", "Mace", "Digital Transformation Portfolio & PMO Manager", "Change/Transformation", "n/a", "Digital transformation portfolio/PMO; construction consultancy; PMO-leaning; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4458510264/"],
+["2026-10-30", "2026-10-30", "Médecins Sans Frontières (MSF) UK", "Change Delivery Project Manager", "Change/Transformation", "£54.5k–£66.6k", "⚠️ mostly below target; change delivery in charity; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484950890/"],
+["2026-10-30", "2026-10-30", "Dunelm", "Senior Analyst - Commercial Analytics", "Data/BI", "n/a", "Homewares retail commercial analytics — retail fit; Senior Analyst grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4485290179/"],
+["2026-10-30", "2026-10-30", "RAPP", "Senior Data Analyst", "Data/BI", "n/a", "CRM/data-marketing agency — CRM analytics fit; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4475970841/"],
+["2026-10-30", "2026-10-30", "Fractal", "Senior Marketing Analytics Consultant", "Data/BI", "n/a", "Analytics consultancy, marketing analytics; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484542132/"],
+["2026-10-30", "2026-10-30", "Infosys", "Principal Consultant_ Reporting", "Data/BI", "n/a", "Reporting consulting at IT services firm — BI reporting fit; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483038527/"],
+["2026-10-30", "2026-10-30", "Sky", "Insights Analyst", "Data/BI", "n/a", "Media/telecom insights; Analyst grade may be below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4485260195/"],
+["2026-10-30", "2026-10-30", "VodafoneThree", "Digital Insights Specialist", "Data/BI", "n/a", "Digital insights at telecom; Specialist grade may be below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483047810/"],
+["2026-10-30", "2026-10-30", "VodafoneThree", "Senior Retention Manager", "CRM", "n/a", "Customer retention at telecom — CRM/retention fit; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483048842/"],
+["2026-10-30", "2026-10-30", "Rail Delivery Group", "Senior Data Analyst", "Data/BI", "£52k–£69.4k", "⚠️ mostly below target; rail industry body; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484978792/"],
+["2026-10-30", "2026-10-30", "L'Oréal", "Medical Data Analyst", "Data/BI", "n/a", "Former employer; medical/scientific data domain — check fit; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484164951/"],
+["2026-10-30", "2026-10-30", "AEGIS London", "Senior Data Analyst", "Data/BI", "n/a", "Insurance data analyst; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4467995466/"],
+["2026-10-30", "2026-10-30", "Greater London Authority", "Senior Data Analyst, SSM", "Data/BI", "n/a", "Public-sector data analyst; pay likely below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4477087915/"],
+["2026-10-30", "2026-10-30", "Inspired Education Group", "Senior Data Analyst", "Data/BI", "n/a", "Education group data analyst; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484992235/"],
+["2026-10-30", "2026-10-30", "Forbes Advisor", "Senior Analyst, Business Analytics (Remote)", "Data/BI", "n/a", "Business analytics at media/comparison site; remote; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4468321097/"],
+["2026-10-30", "2026-10-30", "University of East London", "Business Intelligence Analyst", "Data/BI", "n/a", "BI analyst; university pay likely below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4485214174/"],
+["2026-10-30", "2026-10-30", "Sainsbury's", "Associate Analyst", "Data/BI", "n/a", "Retail analytics; Associate grade likely below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483067446/"],
+["2026-10-30", "2026-10-30", "NiCE", "Product Customer Success Manager", "Customer success", "n/a", "CX/AI software product CSM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483039182/"],
+["2026-10-30", "2026-10-30", "SailPoint", "Manager, Customer Success Management", "Customer success", "n/a", "Manages CSM team at identity-security SaaS; security domain gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4477400230/"],
+["2026-10-30", "2026-10-30", "Thomson Reuters", "Customer Success Manager, EMEA", "Customer success", "n/a", "Information/AI software CSM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484539313/"],
+["2026-10-30", "2026-10-30", "MongoDB", "Senior Customer Success Manager", "Customer success", "n/a", "Database/tech CSM — technical domain gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4459362283/"],
+["2026-10-30", "2026-10-30", "Kong", "Staff Customer Success Manager, UK", "Customer success", "n/a", "API-platform CSM — technical domain gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4485223813/"],
+["2026-10-30", "2026-10-30", "LaunchDarkly", "Senior Customer Success Manager - EMEA", "Customer success", "n/a", "Developer-tooling CSM — technical domain gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4485225142/"],
+["2026-10-30", "2026-10-30", "Wiser", "Customer Success Manager (Wisdom)", "Customer success", "n/a", "Retail pricing-intelligence SaaS CSM — retail overlap; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484524980/"],
+["2026-10-30", "2026-10-30", "Citywire", "Customer Success Manager", "Customer success", "n/a", "Financial media CSM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484528677/"],
+["2026-10-30", "2026-10-30", "Windward", "Customer Success Manager", "Customer success", "n/a", "Maritime AI/data SaaS CSM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483028561/"],
+["2026-10-30", "2026-10-30", "TiPJAR", "Enterprise Customer Success Manager", "Customer success", "n/a", "Hospitality tipping fintech CSM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483059228/"],
+["2026-10-30", "2026-10-30", "Emerald", "Customer Success Manager", "Customer success", "n/a", "CSM; company details unclear; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4448943234/"],
+["2026-10-30", "2026-10-30", "Dalux", "Customer Success Manager, Infrastructure", "Customer success", "n/a", "Construction software CSM; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4473782088/"],
+["2026-10-30", "2026-10-30", "Centellic", "Customer Success Manager", "Customer success", "n/a", "CSM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4485296864/"],
+["2026-10-30", "2026-10-30", "L'Oréal (Dermatological Beauty Division)", "Senior CRM & DTC Manager, LDB", "CRM", "n/a", "Former employer; owns CRM & direct-to-consumer strategy for La Roche-Posay/CeraVe/SkinCeuticals/Vichy, data analysis & storytelling, line management — very strong beauty CRM + data fit, Senior Manager grade likely in range; 2026 requisition (123699); L'Oréal job pages sometimes redirect — if so search careers.loreal.com; Post date unknown", "A", "https://career.loreal.com/IT/JobDetail/2026-LOA-UKI-Senior-CRM-DTC-Manager-LDB/123699"],
+["2026-10-29", "2026-10-30", "Capgemini Invent", "Consultant - Service Management Transformation", "Change/Transformation", "n/a", "Service-management operating model, governance & transformation roadmaps incl. AI/automation adoption — transformation/adoption angle fits; asks ITIL 4 + ServiceNow/Jira and cloud operating-model knowledge (big gap); Consultant grade may be below £65k; London/Manchester/Glasgow, flexible travel (ref 527741); Posted 2 Oct", "A", "https://careers.capgemini.com/job/London-Consultant-Service-Management-Transformation/1423535033/"],
+["2026-10-29", "2026-10-29", "EY-Parthenon", "Manager, Analytics & AI", "Data/BI", "n/a", "Leads client analytics delivery: dashboards (Power BI/Tableau), data models, requirements through user training, stakeholder management — analytics fit at Manager grade; asks 4–7 yrs data/analytics ideally in consulting plus SQL/Python & cloud (gap); req 1741307; Posted 2 Oct", "A", "https://careers.ey.com/ey/job/London-Manager%2C-Analytics-&-AI%2C-EY-Parthenon-SE1-2AF/1433534633/"],
+["2026-10-29", "2026-10-30", "Accenture", "Applied AI Process Manager (AI Transformation & Process Excellence Manager)", "AI adoption", "n/a", "AI-enabled process redesign, operating-model change, adoption planning and change-impact assessments via client workshops — strong AI-transformation pivot fit; asks process-excellence/consulting experience (gap); in-office Fenchurch St; removed 23 Oct as first listed ~Jul, now reposted; earlier Workday req R00343203 — check for a new req; Reposted ~28 Oct (Built In)", "M", "https://builtinlondon.uk/job/ai-transformation-process-excellence-manager/11023477"],
+["2026-10-29", "2026-10-30", "Accenture", "Applied AI Process Consultant", "AI adoption", "n/a", "Same AI process-transformation team at Consultant grade — AI pivot fit; may be below £65k; removed 23 Oct as first listed ~Jul, now reposted; earlier Workday req R00343193 — check for a new req; Reposted ~27 Oct (Built In)", "M", "https://builtinlondon.uk/job/ai-transformation-process-excellence-consultant/10233636"],
+["2026-10-28", "2026-10-30", "Jo Malone London (Estée Lauder Companies)", "CRM Manager", "CRM", "n/a", "Owns brand CRM strategy, lifecycle programmes, consumer data & insight and KPIs (retention, repeat rate), manages 2 reports incl. a data analyst — very strong beauty CRM fit; ELC job no. 242335; no official page found (search ELC careers); Post date unknown", "M", "https://www.themuse.com/jobs/elcbeauty/jo-malone-london-crm-manager-04b332"],
+["2026-10-28", "2026-10-30", "Prada Group", "PRADA In-Store CRM Manager, Selfridges", "CRM", "n/a", "Store CRM/clienteling: customer-data quality, client lists, sales-associate KPI reviews, store reports, CRM training — luxury CRM fit; store-based with evenings/weekends; likely below £65k; Posted 12 Oct", "A", "https://jobs.pradagroup.com/job/London-PRADA-In-Store-CRM-Manager%2C-Selfridges/1416316933/"],
+["2026-10-28", "2026-10-30", "Giorgio Armani", "CRM & Client Engagement Specialist (Maternity Cover FTC)", "CRM", "n/a", "CRM reports & store KPIs, clienteling and gifting campaigns, client events — luxury CRM fit; Specialist grade likely below £65k; fixed-term; hybrid, head office; Post date unknown", "A", "https://jobs.workable.com/view/22f96672-7f0c-471b-ba41-6abd56439d6b"],
+["2026-10-28", "2026-10-30", "Estée Lauder Companies", "Senior Consumer Insights Manager (FTC)", "Data/BI", "n/a", "UK consumer insights: segmentation, brand health, social listening, 1st/3rd-party data, leads team of 2 — beauty insights fit; research/agency-leaning rather than BI; fixed-term; job no. 245359; no official page found; Post date unknown", "M", "https://themuse.com/jobs/elcbeauty/estee-lauder-companies-senior-consumer-insights-manager-fixed-term-contract"],
+["2026-10-28", "2026-10-28", "e.l.f. Beauty", "Manager, Business Analytics", "Data/BI", "n/a", "Beauty brand business analytics manager — beauty background + analytics strong fit; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4466526499/"],
+["2026-10-28", "2026-10-30", "Ralph Lauren", "CX Manager, CIX EMEA", "CRM", "n/a", "Luxury target employer, CX/CIX team (same team as tracked CRM/CX roles) — strong luxury CRM fit; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482295849/"],
+["2026-10-28", "2026-10-28", "Grant Thornton UK", "AI Advisory Manager", "AI adoption", "n/a", "AI advisory consulting at Manager grade — matches AI-consulting pivot; may ask consulting experience; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4474079429/"],
+["2026-10-28", "2026-10-28", "Janus Henderson Investors", "AI Enablement Partner", "AI adoption", "n/a", "AI enablement/adoption partner — matches pivot; asset-management sector; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4456902794/"],
+["2026-10-28", "2026-10-30", "Vodafone", "AI Enablement & Academy Specialist", "AI adoption", "n/a", "AI training/academy programmes — adoption & change fit; Specialist grade may be below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482539090/"],
+["2026-10-28", "2026-10-28", "EY", "Manager - Tax Technology and Transformation (AI & Data)", "AI adoption", "n/a", "AI & data in tax transformation at Manager grade; tax domain gap (similar to tracked EY tax roles); hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4438730165/"],
+["2026-10-28", "2026-10-28", "EY", "Manager - AI Tech Transformation - TC - FS", "AI adoption", "n/a", "AI tech transformation at Manager grade; FS sector, may be technical; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4474403399/"],
+["2026-10-28", "2026-10-28", "Boston Consulting Group (BCG)", "Global Strategy & Operations Manager - Tech Innovation & AI", "AI adoption", "n/a", "Internal AI/tech innovation strategy & ops at BCG — AI pivot fit; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483816296/"],
+["2026-10-28", "2026-10-28", "Robert Walters", "Senior Consultant - AI & Data (Transformation Tax Technology)", "AI adoption", "n/a", "Recruiter listing (client unnamed); AI & data in tax tech; City of London; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483888422/"],
+["2026-10-28", "2026-10-28", "Grant Thornton UK", "Technical Manager AI Consultancy", "AI adoption", "n/a", "AI consultancy delivery; \"technical\" may mean hands-on build — check; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4474081346/"],
+["2026-10-28", "2026-10-28", "Amazon Web Services (AWS)", "Senior Delivery Consultant AI - Enterprises, AWS Professional Services", "AI adoption", "n/a", "AI delivery consulting at Big Tech; likely needs hands-on cloud/ML depth (gap); Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484483332/"],
+["2026-10-28", "2026-10-28", "Bionic", "AI Operations Analyst", "AI adoption", "n/a", "AI operations at SME-services firm; Analyst grade likely below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483856611/"],
+["2026-10-28", "2026-10-28", "Jacobs", "Transformation Consultant – Project and Programme Change Management", "Change/Transformation", "n/a", "Change management consulting — change/rollout background fits; engineering-consultancy client base; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484494726/"],
+["2026-10-28", "2026-10-28", "PA Consulting", "Shared Services Transformation Consultant", "Change/Transformation", "n/a", "Shared-services transformation consulting; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4401809539/"],
+["2026-10-28", "2026-10-28", "FTI Consulting", "(Senior) Consultant, Business Transformation – PE Technology", "Change/Transformation", "n/a", "Business transformation for PE-backed companies; Consultant grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4476757165/"],
+["2026-10-28", "2026-10-28", "Solvex Solutions", "Organisational Design Consultant", "Change/Transformation", "n/a", "Org design consulting; people-side change; hybrid; Easy Apply; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482520613/"],
+["2026-10-28", "2026-10-28", "Sompo", "Business Transformation Analyst", "Change/Transformation", "n/a", "Transformation analyst in insurance; Analyst grade likely below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4474904304/"],
+["2026-10-28", "2026-10-28", "Royal College of Physicians", "Portfolio Pathway Transformation Manager", "Change/Transformation", "£38.4k", "⚠️ well below target; education/membership body transformation; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482264852/"],
+["2026-10-28", "2026-10-28", "Soho House & Co", "Senior Data Analyst – Labour & Productivity", "Data/BI", "n/a", "Premium hospitality/members-club analytics — luxury-adjacent; labour/ops data focus; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4476330647/"],
+["2026-10-28", "2026-10-28", "Soho House & Co", "Growth and Retention Membership Manager - UK & Ireland", "CRM", "n/a", "Membership growth & retention at premium lifestyle brand — CRM/retention fit; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484709662/"],
+["2026-10-28", "2026-10-28", "CASIO UK", "Digital Marketing & Commercial Analytics Manager", "Data/BI", "n/a", "Consumer brand commercial/marketing analytics manager; Wembley, hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484453999/"],
+["2026-10-28", "2026-10-28", "Capgemini", "Senior Data Analyst", "Data/BI", "n/a", "Data analyst at target consultancy; check if client-facing BI; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484462181/"],
+["2026-10-28", "2026-10-28", "Morgan Hunt", "Data Business Analyst", "Data/BI", "£70k", "In target range; recruiter listing (client unnamed); Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482537232/"],
+["2026-10-28", "2026-10-28", "Lottie", "Senior Data Analyst", "Data/BI", "£60k–£80k", "Mostly in target range; care-tech start-up; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4475752322/"],
+["2026-10-28", "2026-10-28", "Royal College of General Practitioners", "Data Analyst", "Data/BI", "£63.2k", "⚠️ just below target; membership body; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482525942/"],
+["2026-10-28", "2026-10-28", "Canon EMEA", "Senior Analyst - Data & Analytics", "Data/BI", "n/a", "Consumer electronics analytics; Uxbridge, hybrid; grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484468339/"],
+["2026-10-28", "2026-10-28", "Universal Music Group UK", "Senior UK Data Analyst", "Data/BI", "n/a", "Music/entertainment data analyst; consumer brand; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4278799725/"],
+["2026-10-28", "2026-10-28", "Global", "Product Analyst", "Data/BI", "n/a", "Media company product analytics; grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483696301/"],
+["2026-10-28", "2026-10-28", "VodafoneThree", "Retail Reporting Specialist (12-month FTC)", "Data/BI", "n/a", "Retail reporting — Power BI/reporting fit; fixed-term; grade may be below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481047386/"],
+["2026-10-28", "2026-10-28", "NatWest Group", "Data & Analytics Analyst", "Data/BI", "n/a", "Bank data analyst; Analyst grade likely below £65k; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484497373/"],
+["2026-10-28", "2026-10-28", "Meta", "Client Solution Manager, Retail & Ecomm", "Customer success", "n/a", "Big Tech client solutions for retail/e-commerce advertisers — retail fit; ads/measurement focus; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4476580785/"],
+["2026-10-28", "2026-10-28", "Multiverse", "Enterprise Customer Value Partner", "Customer success", "n/a", "Enterprise customer value/adoption at AI-skills training company; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482549222/"],
+["2026-10-28", "2026-10-28", "Mixpanel", "Customer Value Architect III", "Customer success", "n/a", "Analytics vendor customer value role — analytics background relevant; possibly a re-listing of tracked Customer Value Architect, EMEA; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484254042/"],
+["2026-10-28", "2026-10-28", "Box", "Customer Success Manager", "Customer success", "n/a", "Enterprise content/AI SaaS CSM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484252169/"],
+["2026-10-28", "2026-10-28", "CloudBees", "Customer Success Manager (EMEA)", "Customer success", "n/a", "DevOps software CSM — technical domain gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4458254183/"],
+["2026-10-28", "2026-10-28", "Luware", "Customer Success Manager - SaaS B2B", "Customer success", "n/a", "Contact-centre SaaS CSM; City of London, hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483854380/"],
+["2026-10-28", "2026-10-28", "Duck Creek Technologies", "Customer Success Management Manager", "Customer success", "n/a", "Insurance software CSM manager; remote; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4465252450/"],
+["2026-10-28", "2026-10-28", "Sedgwick", "Customer Success Manager", "Customer success", "n/a", "Claims-services CSM; remote; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482249508/"],
+["2026-10-28", "2026-10-28", "HiBob", "Implementation Manager", "Customer success", "n/a", "HR-tech implementation/onboarding — rollout experience fits; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484478398/"],
+["2026-10-28", "2026-10-28", "M-KOPA", "Senior CRM Manager", "CRM", "n/a", "Senior CRM manager at fintech for emerging markets; remote; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484487798/"],
+["2026-10-28", "2026-10-28", "Handelsbanken", "Service Manager (CRM)", "CRM", "n/a", "CRM platform service management at bank — Salesforce/CRM rollout background may fit; check platform; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482544679/"],
+["2026-10-28", "2026-10-28", "VCCP", "Senior Account Manager - (Loyalty & CRM)", "CRM", "n/a", "Agency account management on loyalty/CRM clients; client-service leaning; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4448100244/"],
+["2026-10-28", "2026-10-28", "Ignite", "CRM Manager", "CRM", "£50k–£60k", "⚠️ below target; CRM manager; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482523233/"],
+["2026-10-28", "2026-10-30", "Microsoft", "Strategic Account Technology Strategist, Financial Services", "AI adoption", "£79.7k–£133.9k", "Customer-facing digital/AI transformation strategist for FS accounts — transformation pivot fit; ⚠️ range top above target; IC5 asks proven digital-transformation experience (ideally FS), technical depth and change leadership — FS/technical gaps; in-office Paddington; no official page found (check apply.careers.microsoft.com); Reposted ~18 Oct (Built In \"reposted 10 days ago\" on 28 Oct)", "M", "https://builtinlondon.uk/job/strategic-account-technology-strategist-financial-services/11488210"],
+["2026-10-27", "2026-10-27", "Accenture", "Agentic Strategy & Advisory Manager", "AI adoption", "n/a", "Agentic AI strategy & advisory at Manager grade — direct match to AI-transformation consulting pivot; Manager likely in range; may ask consulting experience; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483667692/"],
+["2026-10-27", "2026-10-27", "itsu", "Loyalty, CRM & Insights Manager", "CRM", "n/a", "Loyalty + CRM + insights in one role — strong CRM analytics fit; food retail not luxury; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483315322/"],
+["2026-10-27", "2026-10-27", "Langley James HR & IT Recruitment", "AI Digital Ops Manager, Creative", "AI adoption", "£80k", "In target range; AI digital operations for a creative business (client unnamed, EC1); recruiter; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483670441/"],
+["2026-10-27", "2026-10-27", "Accenture", "Agentic Strategy & Advisory Consultant", "AI adoption", "n/a", "Same agentic AI advisory team at Consultant grade — may be below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483670559/"],
+["2026-10-27", "2026-10-27", "Hightouch", "AI Decisioning Strategy Consultant", "AI adoption", "n/a", "AI decisioning for marketing/CRM (composable CDP) — CRM + AI fit; remote (Harrow); Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4475876590/"],
+["2026-10-27", "2026-10-27", "Kraken", "Principal Engagement Manager, AI", "AI adoption", "n/a", "AI engagement/delivery with energy-sector clients; Principal may be senior; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482202919/"],
+["2026-10-27", "2026-10-27", "Attio", "Customer Success Manager", "Customer success", "n/a", "AI-native CRM SaaS — CRM background highly relevant; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4467426502/"],
+["2026-10-27", "2026-10-27", "Zendesk", "Principal AI Success Strategist, Customer Success", "AI adoption", "n/a", "AI adoption/value with CX customers — AI + CRM fit; Principal may need SaaS CS years; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4446053728/"],
+["2026-10-27", "2026-10-27", "Keystone", "Engagement Manager - Data & AI Strategy", "AI adoption", "n/a", "Data & AI strategy consulting at engagement-manager level; likely expects consulting background; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483650981/"],
+["2026-10-27", "2026-10-27", "Shell", "Senior Consultant - Technology, Data & AI Strategy", "AI adoption", "n/a", "Internal tech/data/AI strategy consulting at energy major; grade likely in range; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483682143/"],
+["2026-10-27", "2026-10-27", "Shell", "Consultant - Technology, Data & AI Strategy", "AI adoption", "n/a", "Same team at Consultant grade — may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483620651/"],
+["2026-10-27", "2026-10-27", "Didero", "AI Deployment Strategist", "AI adoption", "n/a", "AI deployment at AI start-up; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484089666/"],
+["2026-10-27", "2026-10-27", "Didero", "Senior AI Deployment Strategist", "AI adoption", "n/a", "Senior version of the AI deployment role; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484093601/"],
+["2026-10-27", "2026-10-27", "A.Team", "Deployment Strategist, AI Solutions", "AI adoption", "n/a", "AI solutions deployment strategist; check how technical; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483249866/"],
+["2026-10-27", "2026-10-27", "Hebbia", "AI Strategist", "AI adoption", "n/a", "AI strategist at AI document-search start-up (FS clients); on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4476324578/"],
+["2026-10-27", "2026-10-27", "Haleon", "AI & Automation Analyst Europe W&D", "AI adoption", "n/a", "AI/automation in consumer health; Analyst grade likely below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483686514/"],
+["2026-10-27", "2026-10-27", "Global Payments Inc.", "AI Agent Designer", "AI adoption", "n/a", "Designing AI agents in payments; may be hands-on/technical; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484077898/"],
+["2026-10-27", "2026-10-27", "Figma", "Customer Enablement Manager - Figma Weave", "Customer success", "n/a", "Customer enablement/adoption at design-software company; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483259730/"],
+["2026-10-27", "2026-10-27", "Amazon Web Services (AWS)", "Senior Customer Success Specialist - Agentic SDLC", "Customer success", "n/a", "Agentic AI adoption for software teams; likely needs developer-tooling depth (gap); already viewed on LinkedIn; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4475848145/"],
+["2026-10-27", "2026-10-27", "DTCC", "Transformation Delivery Senior Associate - Enterprise Transformation", "Change/Transformation", "n/a", "Enterprise transformation delivery; FS infrastructure; Senior Associate may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4476336061/"],
+["2026-10-27", "2026-10-27", "TRIA", "Change Manager", "Change/Transformation", "n/a", "Recruiter listing (client unnamed); hybrid; Easy Apply; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482201501/"],
+["2026-10-27", "2026-10-27", "Accenture", "Separation Management Office Manager", "Change/Transformation", "n/a", "M&A separation programme office at Manager grade; PMO-leaning; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483613114/"],
+["2026-10-27", "2026-10-27", "North Highland", "Manager, Experience Design & Strategy", "Change/Transformation", "n/a", "CX strategy consulting at Manager grade; design-leaning; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483639581/"],
+["2026-10-27", "2026-10-27", "North Highland", "Senior Consultant, Experience Design & Strategy", "Change/Transformation", "n/a", "Same CX team at Senior Consultant grade — may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483631873/"],
+["2026-10-27", "2026-10-27", "EY-Parthenon", "Senior Executive (Manager) - Decision Modelling", "Data/BI", "n/a", "Decision/financial modelling consulting; modelling-heavy; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4465544965/"],
+["2026-10-27", "2026-10-27", "CBRE", "Senior Consultant - Strategic Programme Management", "Change/Transformation", "n/a", "Strategic programme management; real-estate sector; PM-leaning; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483741982/"],
+["2026-10-27", "2026-10-27", "Charlotte Tilbury Beauty", "Agile Delivery Manager (maternity cover, 14-month FTC)", "Change/Transformation", "n/a", "Prestige beauty brand — sector fit; agile delivery rather than change; fixed-term; hybrid; Easy Apply; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4476168363/"],
+["2026-10-27", "2026-10-27", "PwC UK", "Senior People Consultant (12 month FTC)", "Change/Transformation", "n/a", "People consulting — check if change/transformation scope; fixed-term; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484202317/"],
+["2026-10-27", "2026-10-27", "Capgemini Invent", "Managing Consultant - Supply Chain Analytics", "Data/BI", "n/a", "Analytics consulting at Managing Consultant grade; supply-chain domain gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483777267/"],
+["2026-10-27", "2026-10-27", "Wise", "Senior Product Analytics Manager - Wise Business", "Data/BI", "n/a", "Product analytics manager at fintech; SQL-heavy; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4474291426/"],
+["2026-10-27", "2026-10-27", "Bell Integration", "Revenue Data & Analytics Manager", "Data/BI", "n/a", "Revenue analytics manager at IT services firm; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482210314/"],
+["2026-10-27", "2026-10-27", "Legal & General", "Data Quality Manager", "Data/BI", "n/a", "Data quality/governance; insurance; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484061019/"],
+["2026-10-27", "2026-10-27", "PredictX", "UK Business Intelligence Analyst - Travel & Expense", "Data/BI", "n/a", "BI analyst; travel & expense analytics; grade may be below £65k; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484226120/"],
+["2026-10-27", "2026-10-27", "Prolific", "Senior Data Analyst - Marketplace", "Data/BI", "n/a", "Marketplace analytics at research-data platform; remote; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484091619/"],
+["2026-10-27", "2026-10-27", "Prolific", "Data Analyst - Marketplace", "Data/BI", "n/a", "Junior version — likely below £65k; remote; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484200139/"],
+["2026-10-27", "2026-10-27", "UNiDAYS", "Senior Product Analyst", "Data/BI", "n/a", "Student-discount retail platform — retail-adjacent product analytics; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4471753418/"],
+["2026-10-27", "2026-10-27", "Harrow Council", "Business Intelligence Analyst", "Data/BI", "n/a", "BI analyst; council pay likely below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482224117/"],
+["2026-10-27", "2026-10-27", "University College London Hospitals NHS Foundation Trust", "Senior Research Data Analyst", "Data/BI", "n/a", "Research data analyst; NHS pay likely below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484056731/"],
+["2026-10-27", "2026-10-27", "British Business Bank", "Manager M1 – Analytics, AI and Automation (maternity cover)", "Data/BI", "£48.9k–£59.2k", "⚠️ below target; analytics/AI/automation; fixed-term mat cover; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484051555/"],
+["2026-10-27", "2026-10-27", "Flight Centre Travel Group", "Global CRM & Retention Manager", "CRM", "n/a", "Global CRM/retention — CRM fit; travel sector; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484010455/"],
+["2026-10-27", "2026-10-27", "SumUp", "CRM Manager - Consumer", "CRM", "n/a", "Consumer CRM at fintech; may lean lifecycle marketing; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482210056/"],
+["2026-10-27", "2026-10-27", "Bulk", "Senior CRM Manager", "CRM", "n/a", "DTC nutrition brand CRM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4477575635/"],
+["2026-10-27", "2026-10-27", "Heroes", "CRM Manager", "CRM", "n/a", "CRM manager; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483261601/"],
+["2026-10-27", "2026-10-27", "DEPT", "Fan Engagement & CRM Manager", "CRM", "n/a", "Agency CRM role for a fan/sports client; marketing-leaning; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484211447/"],
+["2026-10-27", "2026-10-27", "GB Bank", "Customer Experience Manager", "CRM", "n/a", "CX manager at challenger bank; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484202105/"],
+["2026-10-27", "2026-10-27", "Credera", "Martech Managing Consultant", "CRM", "n/a", "Martech/CRM platform consulting at Managing Consultant grade — Salesforce background relevant; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4474604274/"],
+["2026-10-27", "2026-10-27", "Skai", "Client Success Enablement Manager", "Customer success", "n/a", "CS enablement at commerce-media platform; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483243952/"],
+["2026-10-27", "2026-10-27", "Kota", "Implementation Manager", "Customer success", "n/a", "Customer implementation/onboarding at benefits-tech start-up; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483650998/"],
+["2026-10-27", "2026-10-27", "Askable", "Enterprise Customer Success Manager (UK)", "Customer success", "n/a", "Enterprise CSM at research SaaS; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4270728721/"],
+["2026-10-27", "2026-10-27", "STATION F", "Senior Customer Success Manager, Enterprise - UK", "Customer success", "n/a", "Listed via STATION F (employer unnamed on card); enterprise CSM; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483266902/"],
+["2026-10-27", "2026-10-27", "Modash", "Technical Customer Success Manager, Europe", "Customer success", "n/a", "Influencer-marketing SaaS; technical CSM; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483660194/"],
+["2026-10-27", "2026-10-27", "RLDatix", "Senior Customer Success Manager", "Customer success", "n/a", "Healthcare software CSM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4473670951/"],
+["2026-10-27", "2026-10-27", "ByteDance", "Customer Success Manager - BytePlus", "Customer success", "n/a", "Big-tech cloud/AI (BytePlus) CSM; on-site; Easy Apply; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483653675/"],
+["2026-10-27", "2026-10-27", "Dot Compliance", "Customer Success Manager", "Customer success", "n/a", "Life-sciences quality SaaS CSM; remote; Easy Apply; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480451760/"],
+["2026-10-27", "2026-10-27", "Rackspace Technology", "Customer Success Manager - Strategic Accounts", "Customer success", "n/a", "Cloud services CSM; Hayes, on-site; Easy Apply; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483630512/"],
+["2026-10-27", "2026-10-27", "SAS", "Customer Success Manager - MoD", "Customer success", "n/a", "Analytics vendor CSM for MoD — security clearance likely required (gap); hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4484085915/"],
+["2026-10-27", "2026-10-30", "Harrods", "CRM Manager (12-month FTC)", "CRM", "n/a", "Luxury department-store CRM: newsletter roadmap, A/B & control testing, retention KPIs, Next Best Action with Data Science — strong luxury CRM fit; in-office Hammersmith; fixed-term with possible permanent; an earlier 6-month version and a permanent version (jid-11667) on Harrods' own site have expired, no official page for this one found yet; Built In company page lists it as 17 days old on 29 Oct (earlier \"yesterday\" label looks like a repost); Posted ~12 Oct", "M", "https://builtinlondon.uk/job/crm-manager/11619173"],
+["2026-10-27", "2026-10-27", "Accenture (Song)", "Agentic Commerce Manager", "AI adoption", "n/a", "Leads digital/agentic-commerce transformation engagements & roadmaps — retail + AI pivot fit, Manager grade likely in range; asks ~7–10 yrs consulting/e-commerce and commerce-platform knowledge (gap); 3 office days/week (R00361839); Posted ~7 Oct (Flexa first listed)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Agentic-Commerce-Manager_R00361839"],
+["2026-10-27", "2026-10-27", "Accenture (Song)", "Digital & Performance Measurement Consultant", "Data/BI", "n/a", "KPI frameworks, dashboards (Power BI/Tableau/Looker), A/B testing, stakeholder KPI workshops — analytics fit; needs Adobe Analytics/GA4 + tag-management experience (gap); Consultant (CL9) grade may be below £65k; London/Manchester, 3 office days/week (R00361678); Posted ~7 Oct (Flexa first listed)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/P-O-Measurement-Consultant_R00361678"],
+["2026-10-27", "2026-10-27", "EY", "Manager - Insurance Technology Transformation, TC FS", "Change/Transformation", "n/a", "Insurance business & technology transformation delivery incl. GenAI use cases; Manager grade likely in range but asks consulting-manager experience and insurance platform (Guidewire/EIS) depth — big gap; ~3 days/week in office (req 1751457); Posted 14 Oct", "A", "https://careers.ey.com/ey/job/London-Manager-Insurance-Technology-Transformation%2C-TC-FS-E14-5EY/1447724033/"],
+["2026-10-27", "2026-10-27", "Accenture", "Technology Operating (Op) Model Manager", "Change/Transformation", "n/a", "Manager (ML7) version of the tracked Op Model Consultant role: IT/Data & AI operating models, value cases & roadmaps; leans engineering (DevOps/Platform/SRE) — gap; London/Manchester/Edinburgh, 3 office days/week (R00362953-1); Posted ~13 Oct (Flexa first listed)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Technology-Operating--Op--Model-Manager_R00362953-1"],
+["2026-10-27", "2026-10-27", "Accenture", "Technology Value Manager", "Change/Transformation", "n/a", "Manager (ML7): business cases for tech/AI investments, cost optimisation, FinOps/TBM — stakeholder skills fit but tech-finance domain is a gap; London/Manchester/Edinburgh, 3 office days/week (R00362958); Posted ~13 Oct (Flexa first listed)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Technology-Value-Manager_R00362958"],
+["2026-10-26", "2026-10-26", "Cognition", "Applied AI Transformation Manager - Europe", "AI adoption", "n/a", "Applied AI transformation at AI coding company (Devin/Windsurf) — direct match to AI-transformation pivot; on-site; reposted, 100+ clicked apply — apply early; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4417988363/"],
+["2026-10-26", "2026-10-26", "Capgemini Invent", "Managing Consultant - AI Product Innovation", "AI adoption", "n/a", "AI product innovation consulting; Managing Consultant grade likely in range but wants consulting experience; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483538969/"],
+["2026-10-26", "2026-10-26", "Salesforce", "Salesforce Innovation Centre Strategist", "Change/Transformation", "n/a", "Customer innovation/transformation workshops at Salesforce — Salesforce rollout background fits; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483535871/"],
+["2026-10-26", "2026-10-27", "Burberry", "Portfolio & Transformation Analyst", "Change/Transformation", "n/a", "Luxury target employer, transformation portfolio; Analyst grade likely below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483536556/"],
+["2026-10-26", "2026-10-26", "Boston Consulting Group (BCG)", "BCG X Global PA AI Strategy & Portfolio Manager", "AI adoption", "n/a", "Internal AI strategy/portfolio management at BCG X — AI pivot fit; check seniority; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4446425920/"],
+["2026-10-26", "2026-10-26", "Distyl", "AI Strategist", "AI adoption", "n/a", "Enterprise AI deployment start-up, strategist role; may expect consulting background; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4417680983/"],
+["2026-10-26", "2026-10-26", "NatWest Boxed", "AI Delivery Manager", "AI adoption", "n/a", "AI delivery in banking-as-a-service; FS sector; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483545551/"],
+["2026-10-26", "2026-10-26", "COS", "Global Customer Experience Manager", "CRM", "n/a", "Fashion retail CX — retail/CRM fit; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483541338/"],
+["2026-10-26", "2026-10-26", "Roberts Group Consulting", "Experienced Change Consultants", "Change/Transformation", "n/a", "Change consultancy hiring experienced consultants; Easy Apply; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483540811/"],
+["2026-10-26", "2026-10-26", "Capgemini Invent", "Managing Consultant", "Change/Transformation", "n/a", "Title vague — appeared in change/transformation search; check JD for practice area; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483556370/"],
+["2026-10-26", "2026-10-26", "Baringa", "Senior Consultant - Government, AI", "AI adoption", "n/a", "AI consulting for government; public-sector gap; Senior Consultant may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4444595437/"],
+["2026-10-26", "2026-10-26", "EY", "Senior Consultant - Insurance Technology Transformation, TC FS", "Change/Transformation", "n/a", "Tech transformation consulting; insurance/FS domain gap; grade may be below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4436615765/"],
+["2026-10-26", "2026-10-26", "Vantage Point Global", "Insurance Transformation Consultant (2-8 Years' Experience)", "Change/Transformation", "n/a", "Transformation consulting; insurance domain gap; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482940859/"],
+["2026-10-26", "2026-10-26", "The Football Association", "HR Programme Manager - Casual Workforce Transformation", "Change/Transformation", "n/a", "Workforce transformation programme; HR domain; sports org; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4478794193/"],
+["2026-10-26", "2026-10-27", "Burberry", "Technology Project Manager", "Change/Transformation", "n/a", "Luxury target employer; tech PM rather than change management; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483552049/"],
+["2026-10-26", "2026-10-26", "Baringa", "Consultant or Senior Consultant - Telco, Media and Technology", "Change/Transformation", "n/a", "Management consulting in TMT; Consultant grade likely below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4447178286/"],
+["2026-10-26", "2026-10-26", "Salesforce", "Salesforce Innovation Center Senior Analyst", "Change/Transformation", "n/a", "Same Innovation Centre team, Senior Analyst grade — likely below £65k; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483533917/"],
+["2026-10-26", "2026-10-26", "John Lewis Partnership", "Insight Manager", "Data/BI", "n/a", "Retail customer insight — retail analytics fit; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482951461/"],
+["2026-10-26", "2026-10-26", "OMD", "Manager, Data Management & Visualisation", "Data/BI", "n/a", "Data visualisation manager at media agency — Power BI skills relevant; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4456275255/"],
+["2026-10-26", "2026-10-26", "Databricks", "Manager, Marketing Insights & Operations — EMEA", "Data/BI", "n/a", "Marketing insights/ops at data/AI platform; tech employer; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4473602997/"],
+["2026-10-26", "2026-10-26", "Wise", "Analytics Manager - Marketing Science", "Data/BI", "n/a", "Marketing science analytics manager; may expect stats/causal-inference depth; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4409712261/"],
+["2026-10-26", "2026-10-26", "Wise", "Senior Product Analyst - Wise Business", "Data/BI", "n/a", "Product analytics at fintech; SQL-heavy; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4324951820/"],
+["2026-10-26", "2026-10-26", "Zurich Insurance", "Senior Data Analyst", "Data/BI", "n/a", "Data analyst in insurance; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482926130/"],
+["2026-10-26", "2026-10-26", "COS", "Global Media Effectiveness Manager", "Data/BI", "n/a", "Fashion retail marketing measurement; media analytics lean; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483542282/"],
+["2026-10-26", "2026-10-26", "Atlassian", "Customer Success Manager, Mid-Market EMEA (DX)", "Customer success", "n/a", "SaaS CSM; remote; adoption background fits; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483540739/"],
+["2026-10-26", "2026-10-26", "Statista", "Senior Customer Success Manager - Key Accounts EMEA", "Customer success", "n/a", "Data platform CSM; analytics background relevant; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4461954401/"],
+["2026-10-26", "2026-10-27", "Didomi", "Enterprise Customer Success Manager", "Customer success", "£65k–£75k", "Consent/privacy SaaS CSM; hybrid; employer salary on Glassdoor 27 Oct; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481430723/"],
+["2026-10-26", "2026-10-26", "WYN", "Customer Success Manager", "Customer success", "n/a", "Company details unclear; on-site; actively reviewing applicants; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483388009/"],
+["2026-10-26", "2026-10-26", "The Electric Car Scheme", "Customer Success Manager", "Customer success", "n/a", "EV salary-sacrifice scheme; Hayes, hybrid; grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483548297/"],
+["2026-10-26", "2026-10-27", "Accenture (Strategy)", "Enterprise Operating Model Strategy Manager", "Change/Transformation", "n/a", "Redesigning operating models for AI (human + AI teams, value streams, governance) — matches AI-transformation pivot; Manager grade likely in range; asks consulting/professional-services background (gap); London/Manchester/Edinburgh, 3 office days/week (R00364726); Posted ~15 Oct (Flexa first listed)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Enterprise-Operating-Model-Strategy-Manager_R00364726"],
+["2026-10-26", "2026-10-26", "Deloitte", "Manager, AI BA, Scaling and Transformation (Engineering, AI & Data)", "AI adoption", "n/a", "Defines AI use cases & requirements, business cases and roadmaps for AI transformation — stakeholder/requirements skills fit; central-government clients, security clearance and public-sector BA experience asked — gaps; hybrid (req 24433); Posted 12 Oct", "M", "https://www.glassdoor.com/job-listing/manager-ai-ba-scaling-and-transformation-engineering-ai-and-data-technology-and-transformation-deloitte-JV_KO0,94_KE95,103.htm?jl=1010216390548"],
+["2026-10-26", "2026-10-27", "Accenture (Strategy)", "Enterprise Operating Model Consultant", "Change/Transformation", "n/a", "Same AI operating-model team at Consultant grade — may be below £65k; org analysis + benchmarking; asks consulting experience; 3 office days/week (R00364637); Posted ~15 Oct (Flexa first listed)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Enterprise-Operating-Model-Consultant_R00364637"],
+["2026-10-26", "2026-10-27", "Accenture", "Technology Operating (Op) Model Consultant", "Change/Transformation", "n/a", "IT/Data & AI operating-model design and transformation roadmaps; leans technical (DevOps/platform engineering) — gap; Consultant (ML9) grade may be below £65k (R00362956); Posted ~13 Oct (Flexa first listed)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Technology-Operating--Op--Model-Consultant_R00362956"],
+["2026-10-25", "2026-10-30", "Accenture", "Digital Workplace Consultant (Associate Manager)", "Change/Transformation", "n/a", "Workplace-tech transformation with change management & new-ways-of-working adoption (collaboration tools, automation, analytics) — rollout/adoption experience fits; leans technical advisory and leads a small team; 3 office days/week (R00361812); Posted ~5 Oct (Flexa first listed; still on Built In 30 Oct)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Digital-Workplace-Consultant_R00361812"],
+["2026-10-24", "2026-10-30", "Salesforce", "Customer Success Manager, Commerce Cloud", "Customer success", "n/a", "Retail e-commerce / omnichannel & customer-lifetime-value knowledge preferred — strong retail + Salesforce fit; asks 7–10 yrs & strong Salesforce platform knowledge; in-office (Bishopsgate); no official page found (search salesforce.wd12.myworkdayjobs.com); Built In listing still in search 30 Oct; Posted ~19 Oct", "M", "https://builtinlondon.uk/job/customer-success-manager-commerce-cloud/11693296"],
+["2026-10-24", "2026-10-24", "EY", "Manager, Tax Technology and Transformation", "Change/Transformation", "n/a", "Tax/finance transformation (people, process, data, tech, operating model) — transformation skills fit but tax/finance domain is a gap; open to Senior Consultant grade too (separate SC FS listing req 1722342, dated 22 Oct); req 1728147; Posted 13 Oct", "A", "https://careers.ey.com/ey/job/London-Manager%2C-Tax-Technology-and-Transformation%2C-London-E14-5EY/1422857733/"],
+["2026-10-24", "2026-10-24", "PwC UK", "Performance Management & Reporting Manager (14-month FTC)", "Data/BI", "£68k–£95k (Glassdoor est.)", "Finance reporting, KPI & change support on internal SAP finance programme; ACA/ACCA finance qualification required — big gap; previously removed 22 Oct as not found, now live on Glassdoor; fixed-term; Posted ~17 Oct", "M", "https://www.glassdoor.co.uk/job-listing/performance-management-reporting-manager-14-mth-ftc-pwc-JV_IC2671300_KO0,51_KE52,55.htm?jl=1010271514785"],
+["2026-10-24", "2026-10-27", "Accenture", "Microsoft Power Platform Delivery Manager", "Change/Transformation", "n/a", "Power Platform/D365 programme delivery — Power BI-adjacent; needs PL-400/PL-600 certs, PMP/PRINCE2 and SC clearance (5 yrs continuous UK address) — big gaps; 3 office days/week (R00357196); Posted ~8 Oct (Flexa first listed)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Microsoft-Power-Platform-Delivery-Manager_R00357196"],
+["2026-10-23", "2026-10-23", "Wise", "Senior Data Analyst – CRM Analytics", "Data/BI", "n/a", "CRM analytics — strong skills match; fintech; already saved on Whitney's LinkedIn; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4436247937/"],
+["2026-10-23", "2026-10-27", "Wise", "Regional CRM Manager", "CRM", "£45k–£65k", "⚠️ below target (employer range per Glassdoor, still listed 27 Oct); CRM manager at fintech; may lean lifecycle marketing; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4469464916/"],
+["2026-10-23", "2026-10-27", "Jefferies", "Power Platform and Copilot Specialist (Analyst)", "AI adoption", "£60k–£80k (Glassdoor est.)", "Power Platform + Copilot rollout — direct skills match; Analyst grade; FS sector; still on Glassdoor 27 Oct; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483122266/"],
+["2026-10-23", "2026-10-23", "Accenture", "Customer Experience Insights Specialist", "Data/BI", "n/a", "CX insights consulting — CRM/analytics background fits; check grade; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4474977802/"],
+["2026-10-23", "2026-10-26", "Accenture", "Technology Value Consultant", "Change/Transformation", "n/a", "Tech value/transformation consulting; Consultant grade may be below £65k; also on Flexa 26 Oct (London/Manchester/Edinburgh); Posted ~23 Oct (LinkedIn; Flexa first listed 24 Oct)", "A", "https://www.linkedin.com/jobs/view/4481918324/"],
+["2026-10-23", "2026-10-23", "EY-Parthenon", "Manager – Tech – Strategy and Execution", "Change/Transformation", "n/a", "Tech strategy & execution at Manager grade; strategy-leaning; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480074586/"],
+["2026-10-23", "2026-10-23", "TechTree", "Senior Transformation Strategist (+ Equity)", "Change/Transformation", "£150k–£200k", "⚠️ above target; AI operations platform for retail & CPG — strong sector/AI theme but senior; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480085351/"],
+["2026-10-23", "2026-10-23", "Microsoft", "Strategic Account Technology Strategist, Media", "AI adoption", "n/a", "Customer-facing tech/AI strategist for media accounts; may need technical depth; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482874228/"],
+["2026-10-23", "2026-10-23", "Sagacity", "Technical Change & Delivery Manager", "Change/Transformation", "n/a", "Change & delivery; \"technical\" may mean IT change; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483103573/"],
+["2026-10-23", "2026-10-23", "PA Consulting", "Project, Programme, Portfolio Manager – Digital Transformation (Financial Services)", "Change/Transformation", "n/a", "Digital transformation delivery; FS sector; PPM-leaning; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481915308/"],
+["2026-10-23", "2026-10-23", "Salesforce", "Senior Customer Success Manager – FinTech/Regulated Markets", "Customer success", "n/a", "Salesforce adoption — rollout background fits; FS industry experience likely required (gap); hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4455955193/"],
+["2026-10-23", "2026-10-23", "Proactive.IT Appointments", "HubSpot CRM Manager", "CRM", "£60k–£70k", "⚠️ partly below target; recruiter; HubSpot not Salesforce; Ealing, hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482885570/"],
+["2026-10-23", "2026-10-23", "ASOS.com", "Senior Product Analyst", "Data/BI", "n/a", "Fashion e-commerce analytics — sector fit; product-analytics lean; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480677036/"],
+["2026-10-23", "2026-10-23", "Sainsbury's", "Experienced Data Analyst – SQL, Advanced Analytics & Insights", "Data/BI", "n/a", "Retail analytics; SQL-heavy; grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480680399/"],
+["2026-10-23", "2026-10-23", "Burberry", "Delivery Manager", "Change/Transformation", "n/a", "Luxury target employer; tech delivery rather than change management; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482850846/"],
+["2026-10-23", "2026-10-23", "Nestlé Nespresso", "Growth & Digital Experience (UX) Manager", "CRM", "n/a", "Premium consumer brand digital/CX growth; UX-leaning rather than CRM; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4483103988/"],
+["2026-10-23", "2026-10-30", "NiCE", "Business Consultant, CX", "Change/Transformation", "n/a", "CX/AI software business consulting; hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480086274/"],
+["2026-10-23", "2026-10-23", "Fitch Ratings", "Customer Success Manager", "Customer success", "n/a", "Financial data/ratings CSM; FS domain gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481907502/"],
+["2026-10-23", "2026-10-27", "Hertz", "Manager Digital Intelligence", "Data/BI", "n/a", "Digital analytics manager; Uxbridge; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481683530/"],
+["2026-10-23", "2026-10-23", "Hertz", "Analyst Change & Adoption Support", "Change/Transformation", "n/a", "Change & adoption support; Analyst level likely below £65k; Uxbridge, hybrid; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480674391/"],
+["2026-10-23", "2026-10-23", "Panoramic Associates", "Senior Business Analyst – Strategic Change", "Change/Transformation", "£57.2k–£60.4k", "⚠️ below target; recruiter; Brent; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482857286/"],
+["2026-10-23", "2026-10-27", "Accenture (Song)", "Agentic Commerce Consultant", "AI adoption", "£51k–£60k (Glassdoor est.)", "⚠️ below target; retail e-commerce transformation + agentic AI, daily AI-tool use — retail/AI pivot fit; wants ~4 yrs commerce (Shopify/SFCC/merchandising) knowledge (R00361848); Posted ~6 Oct", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Agentic-Commerce-Consultant_R00361848"],
+["2026-10-23", "2026-10-28", "EY", "Senior Consultant, AI Advisor – Tax Technology and Transformation (AI & Data)", "AI adoption", "£40k–£60k (Glassdoor est.)", "⚠️ below target; agentic AI for FS tax functions; Power BI/Copilot Studio/Power Platform plus hands-on SQL/Python; 2–5 yrs; still in EY search results 28 Oct (req 1722345); Posted 11 Oct per EY page", "A", "https://careers.ey.com/ey/job/London-Senior-Consultant%2C-AI-Advisor-Tax-Technology-and-Transformation-%28AI-&-Data%29-London-SE1-2AF/1415657233/"],
+["2026-10-23", "2026-10-29", "Mulberry", "Customer Insights Analyst", "Data/BI", "n/a", "Luxury customer insights, dashboards & weekly trade reporting; Salesforce required, GCP/GA (Power BI desirable); analyst level likely below £65k; Kensington, hybrid; not on Mulberry's main Lever list 24–29 Oct but direct page still loads 29 Oct — check before applying; Post date unknown", "A", "https://jobs.lever.co/mulberry/3f6a9ca0-cd46-43be-a8c3-18b657c93556"],
+["2026-10-23", "2026-10-28", "Mulberry", "Senior CRM & Email Executive (6-month contract)", "CRM", "n/a", "Luxury CRM/retention flows, lifecycle & KPI reporting; executive level likely below £65k; email-heavy; fixed-term; Kensington, hybrid; not on Mulberry's main Lever list 24–28 Oct but direct page still loads 28 Oct — check before applying; Post date unknown", "A", "https://jobs.lever.co/mulberry/97a765cd-7e27-46e6-a229-da6a55338ff2"],
+["2026-10-22", "2026-10-27", "L'Oréal", "CRM Manager, PPD", "CRM", "£54k–£63k (Glassdoor est.)", "Former employer; luxury/professional beauty CRM — very strong fit; ⚠️ Glassdoor est. below target; check seniority in JD; still on Glassdoor 27 Oct; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481314636/"],
+["2026-10-22", "2026-10-22", "CHANEL", "Project Manager, Omnichannel Client Data", "CRM", "n/a", "Luxury omnichannel client-data project — rollout/change experience fits; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4455418459/"],
+["2026-10-22", "2026-10-27", "Schroders", "Senior Consultant – AI Transformation", "AI adoption", "n/a", "Internal AI transformation consulting at asset manager — matches pivot; on Glassdoor 27 Oct (est. £54k–£69k); FS sector; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482167333/"],
+["2026-10-22", "2026-10-22", "Robert Walters", "Power BI Report Designer", "Data/BI", "£75k–£90k", "Direct Power BI skills match; recruiter listing (client unnamed); top slightly above target; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482453105/"],
+["2026-10-22", "2026-10-22", "Atlassian", "Senior Scaled Adoption Manager", "Customer success", "n/a", "Product adoption programmes at scale — adoption/change background fits; remote; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4474120075/"],
+["2026-10-22", "2026-10-22", "EY", "Manager – Microsoft Agent Builder – TC – FS", "AI adoption", "n/a", "AI agent rollout at Manager grade; FS sector; may be technical; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4443606047/"],
+["2026-10-22", "2026-10-22", "Salesforce", "Consumption Value Manager, AI & API Solutions", "AI adoption", "n/a", "AI/Agentforce value & adoption — Salesforce rollout background fits; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4455734480/"],
+["2026-10-22", "2026-10-22", "Amazon (AWS)", "AI Strategist, Generative AI Innovation Center", "AI adoption", "n/a", "GenAI strategy with customers; may expect deep technical/consulting background; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4455786790/"],
+["2026-10-22", "2026-10-22", "Global Payments", "AI Strategy Execution", "AI adoption", "n/a", "AI strategy delivery in payments; check seniority; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4465639400/"],
+["2026-10-22", "2026-10-22", "Northern Trust", "CoPilot Product Owner", "AI adoption", "n/a", "Microsoft Copilot rollout/product ownership; FS sector; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4463064889/"],
+["2026-10-22", "2026-10-22", "Mixpanel", "Customer Value Architect, EMEA", "Customer success", "n/a", "Analytics vendor, customer value/adoption — analytics background relevant; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4464647960/"],
+["2026-10-22", "2026-10-29", "EY", "Manager, Sales Transformation", "Change/Transformation", "n/a", "Sales/CRM transformation at Manager grade — CRM experience relevant; official EY page in search 29 Oct (careers.ey.com 1450276633); Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480043669/"],
+["2026-10-22", "2026-10-22", "FTI Consulting", "Senior Consultant, People & Transformation", "Change/Transformation", "n/a", "People-side transformation consulting; Senior Consultant grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4465068085/"],
+["2026-10-22", "2026-10-22", "Boston Consulting Group (BCG)", "Global Change & Communications Senior Specialist – Digital Products", "Change/Transformation", "n/a", "Change & comms for internal digital products — adoption experience fits; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4454464561/"],
+["2026-10-22", "2026-10-22", "MR PORTER (YNAP)", "Capabilities & Intake Manager", "Change/Transformation", "n/a", "Luxury e-commerce capability/intake management; check scope; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480055294/"],
+["2026-10-22", "2026-10-22", "North Highland", "Manager, Organisational Strategy", "Change/Transformation", "n/a", "Change/transformation consultancy, Manager grade; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4464104214/"],
+["2026-10-22", "2026-10-22", "Moorhouse", "Management Consultant – Senior Consultant – Operating Model", "Change/Transformation", "n/a", "Transformation consultancy; Senior Consultant may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4455355500/"],
+["2026-10-22", "2026-10-22", "Turner & Townsend", "Workplace Change Consultant", "Change/Transformation", "n/a", "Workplace/office change; on-site; consultant grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4443259315/"],
+["2026-10-22", "2026-10-22", "HX Expeditions", "Transformation Project Manager", "Change/Transformation", "n/a", "Transformation PM in travel sector; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481184160/"],
+["2026-10-22", "2026-10-22", "Robert Walters", "Senior Data Analyst – Business Data Innovation", "Data/BI", "£75k–£80k", "In target range; recruiter listing (client unnamed); Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482447363/"],
+["2026-10-22", "2026-10-27", "Harnham", "Customer Analytics Manager", "Data/BI", "£60k–£70k", "⚠️ partly below target; customer analytics — CRM analytics fit; recruiter (also listed as 4481373999, £55k–£70k); Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481385197/"],
+["2026-10-22", "2026-10-22", "COS", "Senior Commercial and Consumer Business Analyst", "Data/BI", "n/a", "Fashion retail consumer analytics — sector fit; on-site; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482453602/"],
+["2026-10-22", "2026-10-22", "Takeda", "Data and Insights Manager", "Data/BI", "n/a", "Insights manager; pharma sector; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4479495257/"],
+["2026-10-22", "2026-10-22", "SharkNinja", "Manager, Media Analytics UK", "Data/BI", "n/a", "Consumer brand marketing analytics; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4456332491/"],
+["2026-10-22", "2026-10-22", "Sony Interactive Entertainment", "Senior BI & Visualisation Developer", "Data/BI", "n/a", "BI/visualisation — Power BI skills relevant; developer title may be technical; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480050855/"],
+["2026-10-22", "2026-10-22", "Hunter Bond", "Client Analytics Manager – Leading Insurance firm", "Data/BI", "£90k", "⚠️ above target; client analytics; insurance sector; recruiter; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480047369/"],
+["2026-10-22", "2026-10-22", "Wise", "Senior Analytics Manager – Compliance", "Data/BI", "n/a", "Analytics manager at fintech; compliance domain is a gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481321169/"],
+["2026-10-22", "2026-10-22", "LSE", "Planning Officer (Power BI Developer)", "Data/BI", "n/a", "Direct Power BI match; university pay likely below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4476791336/"],
+["2026-10-22", "2026-10-22", "EY", "Client Technology – Technical Customer Success Manager", "Customer success", "n/a", "Internal tech adoption/customer success; may lean technical; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4472541942/"],
+["2026-10-22", "2026-10-22", "Avolution", "Enterprise Customer Success Manager (UK)", "Customer success", "n/a", "Enterprise-architecture software CSM; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481373117/"],
+["2026-10-22", "2026-10-30", "NiCE", "Principal Customer Success Manager", "Customer success", "n/a", "CX/AI software CSM; Principal may expect SaaS CS years; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4471200767/"],
+["2026-10-22", "2026-10-22", "Forter", "Senior Customer Success Manager", "Customer success", "n/a", "E-commerce fraud platform used by retailers — retail domain overlap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4363721336/"],
+["2026-10-22", "2026-10-22", "Square Enix", "AI Integrations & Automation Specialist", "AI adoption", "n/a", "AI tooling/automation rollout; may be hands-on technical; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482476199/"],
+["2026-10-22", "2026-10-27", "Juicebox", "Customer Success Manager", "Customer success", "£110k–£160k", "⚠️ above target; AI recruiting start-up; on-site; still on Glassdoor 27 Oct; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482415012/"],
+["2026-10-22", "2026-10-22", "Ralph Lauren", "Planning and Strategy Manager, CIX/CRM", "CRM", "n/a", "Luxury omnichannel CRM/CX performance reporting, forecasting & ROI testing; Tableau named (Power BI transferable); finance-planning heavy; RL page menus in Turkish but job text in English (ref W179105); Post date unknown", "A", "https://careers.ralphlauren.com/tr_TR/CareersCorporateCZ/JobDetailRetail/Planning-Strategy-Manager-CIX-EMEA/66715"],
+["2026-10-22", "2026-10-30", "Capgemini Invent", "Responsibly Adopting Workplace AI – Managing Consultant", "AI adoption", "n/a", "Responsible-AI governance & operating models; asks 8+ yrs in consulting/risk/regulatory — stretch; Capgemini page still shows Apply 30 Oct (30 days old today) — remove 31 Oct unless reposted; Posted 30 Sep", "A", "https://careers.capgemini.com/job/London-Responsibly-Adopting-Workplace-AI-Managing-Consultant/1432527733/"],
+["2026-10-22", "2026-10-30", "Salesforce", "Customer Success Manager – FinTech and Health/Life Sciences", "Customer success", "€128k (aggregator); £75k–£91k (Glassdoor est.)", "⚠️ aggregator figure above target (Glassdoor est. in range); 8+ yrs, Sales/Service Cloud adoption; current FS/HLS industry experience required — gap; London office 3 days/week (JR360206); Posted ~16 Oct (Glassdoor 8d on 24 Oct)", "A", "https://salesforce.wd12.myworkdayjobs.com/en-US/External_Career_Site/job/Customer-Success-Manager---FinTech-and-Health-Life-Sciences_JR360206"],
+["2026-10-21", "2026-10-30", "Microsoft", "Customer Success Account Manager (IC1)", "Customer success", "£36.6k–£49.4k", "⚠️ below target; entry-level (~2 yrs exp), AI-tools confidence; in-office London; Built In shows \"reposted an hour ago\" 29 Oct; no official page found (check apply.careers.microsoft.com); Reposted 29 Oct", "M", "https://builtinlondon.uk/job/customer-success-account-manager/11478976"],
+["2026-10-21", "2026-10-22", "Sephora", "Omni Experiences & Services Manager", "CRM", "£37k–£57k (Glassdoor est.)", "⚠️ likely below target; beauty retail omnichannel services; check CRM/clienteling scope; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482117820/"],
+["2026-10-21", "2026-10-27", "Fender", "CRM Marketing Manager", "CRM", "£72k–£81k (Glassdoor est.)", "Consumer brand CRM; may lean email marketing; still on Glassdoor 27 Oct; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4473520799/"],
+["2026-10-21", "2026-10-26", "CSC", "Senior Change Manager", "Change/Transformation", "£41k–£48k (Glassdoor est.)", "⚠️ Glassdoor est. below target; senior change role; corporate services sector; still on Glassdoor 26 Oct; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4479431300/"],
+["2026-10-21", "2026-10-22", "Salesforce", "Agentic Excellence Manager", "AI adoption", "n/a", "Agentforce/AI adoption-type role at target Big Tech employer; posted <1h; check seniority in JD; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482144627/"],
+["2026-10-21", "2026-10-28", "ThoughtSpot", "AI Outcomes Manager", "AI adoption", "n/a", "Customer-facing AI value/adoption role at analytics vendor — BI background relevant; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482129191/"],
+["2026-10-21", "2026-10-21", "Capgemini Invent", "Strategy Consultant – Data & AI Strategy", "AI adoption", "n/a", "Data & AI strategy consulting; Consultant grade may sit below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482000308/"],
+["2026-10-21", "2026-10-21", "Accenture", "Strategy Manager – Consumer Goods & Services", "Change/Transformation", "n/a", "Consumer-goods sector match; strategy-leaning rather than pure change; Manager grade likely in range; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480718894/"],
+["2026-10-21", "2026-10-28", "EY", "Manager, Business Transformation, Health", "Change/Transformation", "n/a", "Business transformation at Manager grade; health sector not retail; still in EY search results 28 Oct; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4471741227/"],
+["2026-10-21", "2026-10-29", "EY", "Senior Consultant, Business Transformation, Health", "Change/Transformation", "n/a", "Same team, Senior Consultant grade — may be below £65k; still in EY search results 29 Oct; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4471725951/"],
+["2026-10-21", "2026-10-21", "EY", "Manager, AI & Data, Health", "AI adoption", "n/a", "AI & data consulting, Manager grade; health sector; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4472181887/"],
+["2026-10-21", "2026-10-29", "EY", "Senior Consultant, AI & Data, Health", "AI adoption", "n/a", "Senior Consultant grade may be below £65k; health sector; still in EY search results 29 Oct; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4472187568/"],
+["2026-10-21", "2026-10-21", "EY", "Senior Consultant, AI&Data, Insurance, FS", "AI adoption", "n/a", "AI & data consulting; FS/insurance sector; grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4478929199/"],
+["2026-10-21", "2026-10-21", "Amazon (AWS)", "GenAI/Agentic Sr. Customer Solutions Manager, EMEA ISV CSMs", "Customer success", "n/a", "GenAI adoption with software-vendor customers; cloud background likely expected; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4455790835/"],
+["2026-10-21", "2026-10-21", "Amazon (AWS)", "Senior Customer Solutions Manager, Global Financial Services", "Customer success", "n/a", "Cloud adoption/transformation for FS customers; cloud background a gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481780716/"],
+["2026-10-21", "2026-10-21", "Klaviyo", "Senior Customer Success Manager – Enterprise", "Customer success", "n/a", "CRM/marketing platform used by retail & beauty brands — strong domain overlap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4471914297/"],
+["2026-10-21", "2026-10-21", "Synthesia", "Strategic Customer Success Manager", "Customer success", "n/a", "AI video company; enterprise adoption focus; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482060780/"],
+["2026-10-21", "2026-10-23", "Ralph Lauren", "Global CX Strategy Analyst", "CRM", "n/a", "Luxury CX strategy; Analyst level likely below £65k; also re-listed via BoF Careers (4481666263); Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4479423460/"],
+["2026-10-21", "2026-10-21", "Akkodis", "ServiceNow CRM Transformation Consultant", "CRM", "£85k–£100k", "⚠️ partly above target; ServiceNow CRM transformation — technical platform gap; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4478985781/"],
+["2026-10-21", "2026-10-21", "ServiceNow", "Implementation Manager – Moveworks", "AI adoption", "n/a", "AI assistant (Moveworks) implementation/rollout — matches rollout experience; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481240893/"],
+["2026-10-21", "2026-10-21", "BT Group", "Business Change Specialist", "Change/Transformation", "n/a", "Business change delivery; Specialist grade may be below £65k; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4478994696/"],
+["2026-10-21", "2026-10-21", "Accurx", "Transformation Manager", "Change/Transformation", "n/a", "Health-tech scale-up transformation role; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4472150830/"],
+["2026-10-21", "2026-10-21", "NAVEX", "Strategy & Transformation Manager", "Change/Transformation", "n/a", "Strategy & transformation at software company; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482119010/"],
+["2026-10-21", "2026-10-21", "Expleo Group", "Senior Business Change Consultant", "Change/Transformation", "n/a", "Business change consultancy role; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482043468/"],
+["2026-10-21", "2026-10-21", "Blue Light Card", "Operational Change Manager", "Change/Transformation", "n/a", "Operational change; consumer membership business; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481128127/"],
+["2026-10-21", "2026-10-21", "Hertz", "Change & Adoption Analyst – Digital Intelligence, Global Franchise Growth", "Change/Transformation", "n/a", "Change & adoption for digital tools; Analyst level likely below £65k; Uxbridge; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4478986804/"],
+["2026-10-21", "2026-10-21", "the LEGO Group", "Manager, People Analytics & Insights", "Data/BI", "n/a", "Consumer brand analytics manager; HR/people data domain; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4442816351/"],
+["2026-10-21", "2026-10-27", "Lindt & Sprungli UK", "BI Analyst/Developer", "Data/BI", "£55k–£65k", "⚠️ mostly below target; consumer/luxury-food BI role; still on Glassdoor 27 Oct (as \"BI Developer\"); Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4482066130/"],
+["2026-10-21", "2026-10-21", "Accenture", "Planning, Performance and Insights (Manager)", "Data/BI", "n/a", "Performance reporting/insights at Manager grade — check if internal ops role; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4480741037/"],
+["2026-10-21", "2026-10-21", "Amazon", "Business Intelligence Engineer, Strategic Account Services", "Data/BI", "n/a", "BI/SQL dashboards; engineer title may need strong SQL/Python; Posted within 24h of first seen (LinkedIn)", "A", "https://www.linkedin.com/jobs/view/4481747738/"],
+["2026-10-20", "2026-10-27", "OpenAI", "AI Deployment Manager", "AI adoption", "n/a", "ChatGPT Enterprise enablement/adoption, workshops & playbooks, no coding — closest match to AI-transformation pivot; asks 6+ yrs customer-facing; hybrid 3 days, page still live 27 Oct (Built In shows 12 days); OpenAI page could not be fetched 28 Oct; Reposted ~13 Oct", "A", "https://openai.com/careers/ai-deployment-manager-london-uk/"],
+["2026-10-20", "2026-10-29", "Alfred Dunhill (Richemont)", "Global Client & CRM Manager", "CRM", "n/a", "Salesforce Service/Marketing Cloud, clienteling, CRM analytics — very strong luxury CRM fit; Richemont page live with Apply button 29 Oct; Post date unknown", "A", "https://careers.richemont.com/en/jobs/jr129011/global-client-crm-manager/"],
+["2026-10-20", "2026-10-21", "Capgemini Invent", "Managing Consultant – Change Management – Consumer Products & Retail", "Change/Transformation", "n/a", "Best sector match (CP&R change); wants current Big-consulting experience; status unclear; no official page found (search careers.capgemini.com); Post date unknown", "M", "https://www.itjobswatch.co.uk/jv/Capgemini-Invent/Managing-Consultant-Change-Management-Consumer-Products-Retail-Job-London-UK-4wg9gc"],
+["2026-10-20", "2026-10-21", "EY", "Senior Consultant, Workforce Transformation & People Experience, Financial Services", "Change/Transformation", "n/a", "People-centred change delivery; FS sector not retail; posted 15 Oct; Posted 15 Oct", "A", "https://careers.ey.com/ey/job/London-Senior-Consultant%2C-Workforce-Transformation-&-People-Experience%2C-Financial-Services-E14-5EY/1448137333/"],
+["2026-10-20", "2026-10-29", "Accenture", "Transformation Change Manager (CL7)", "Change/Transformation", "n/a", "Enterprise change on Salesforce/SAP etc. — matches rollout experience; still on Glassdoor London change search 29 Oct (R00289968); Reposted ~21 Oct (first listed Apr)", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Transformation-Change-Manager_R00289968"],
+["2026-10-20", "2026-10-30", "Accenture", "Change Transformation Consultant", "Change/Transformation", "£48k–£55k (Glassdoor est.)", "⚠️ likely below target; change impact, AI-enabled comms, Salesforce; Flexa & accenture.com listings in search 28 Oct (R00364368); Posted ~14 Oct", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London-30-Fenchurch-Street/Change-Transformation-Consultant_R00364368"],
+["2026-10-20", "2026-10-26", "Salesforce", "Senior Agentic Customer Success Manager", "Customer success", "n/a", "Adoption & change for Agentforce/AI; asks 8+ yrs (stretch); still on mirror 26 Oct; Posted ~4 Oct", "A", "https://salesforce.wd12.myworkdayjobs.com/en-US/External_Career_Site/job/United-Kingdom---London/Senior-Agentic-Customer-Success-Manager_JR362550-1"],
+["2026-10-20", "2026-10-21", "Amazon (AWS)", "Sr. Customer Solutions Manager, UKI Enterprise", "Customer success", "n/a", "Cloud/GenAI adoption & transformation, no coding; cloud-migration background is a gap; posted 15 Oct; Post date unknown (likely Sep–Oct)", "A", "https://www.amazon.jobs/en/jobs/10579791/sr-customer-solutions-manager-uki-customer-solutions-management-field-ags-uki-ent-cs"],
+["2026-10-20", "2026-10-29", "Accenture (Song)", "Sales & Technology Transformation Consultant", "CRM", "£48k–£55k (Glassdoor est.)", "⚠️ likely below target; needs CRM platform (Salesforce/Dynamics) experience (R00361592); Flexa listing still in search 29 Oct; Posted ~2 Oct", "A", "https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/job/London/Technology-Transformation-Consultant_R00361592"],
+["2026-10-20", "2026-10-21", "Deloitte (FS)", "Business Change Manager (contract, Inside IR35)", "Change/Transformation", "n/a", "Adoption & readiness, agentic AI desirable; 8+ yrs asked; aggregator only, no official page found; Post date unknown", "M", "https://www.dreamworkhq.com/job/8a727025-6080-4b16-b71d-b87dcb7df6f4"],
+["2026-10-20", "2026-10-30", "Anthropic", "Customer Success Manager", "Customer success", "£135k–£165k", "⚠️ above target; needs API/AI fluency — stretch; Built In shows posted 21 days ago on 30 Oct; Reposted ~8 Oct (first posted 19 Aug)", "A", "https://job-boards.greenhouse.io/anthropic/jobs/5391102008"],
+["2026-10-20", "2026-10-21", "Amazon (AWS)", "Change & Release Manager, AWS ProServe UKGI", "Change/Transformation", "n/a", "Likely ITIL/IT change rather than business change; public sector; Posted 7 Oct", "A", "https://www.amazon.jobs/en/jobs/10571550/change-release-manager-aws-proserve-ukgi"],
+["2026-10-20", "2026-10-29", "Mulberry", "Digital Marketing Manager", "CRM", "n/a", "Retention/CRM strategy & KPI reporting; leans email marketing; Kensington, hybrid; on Mulberry Lever list 29 Oct; Posted ~3 Oct", "A", "https://jobs.lever.co/mulberry/a0cb8e16-fe51-4409-a511-5a05931b14e8"],
+["2026-10-20", "2026-10-29", "Mulberry", "Project Manager", "Change/Transformation", "n/a", "Technology & customer-experience project delivery; PM not change mgmt; on Mulberry Lever list 29 Oct; Posted ~4 Sep–2 Oct (sources differ)", "A", "https://jobs.lever.co/mulberry/54666eee-be80-40de-8a9f-effad9b93501"]
+];
+const APPLIED=[["CHANEL", "Client Data Manager", "applied 2026-10-23"]];
+const REMOVED=[
+["Visa", "Senior Manager, AI Transformation and Change Management", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["PwC UK", "SAP AI & Delivery Transformation Senior Manager", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["Capgemini Invent", "ERP Transformation Specialist - Senior Manager (SC Clearable)", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["OMD", "Senior Manager Data Management and Visualisation", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["Tapestry", "Senior Manager, Data Analytics", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["PwC UK", "Business Solutions Transformation Senior Manager, 13 Mth FTC", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["Crunchyroll", "Senior Manager, CRM Marketing, Europe", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["EY", "Senior Manager, Marketing Transformation", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["KPMG UK", "GCT - Transformation Senior Manager", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["Burberry (via BoF Careers)", "Senior Manager, Data Products & Governance", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["Better Collective", "CRM & Lifecycle Senior Manager", "Whitney: Senior Manager-level — beyond reach (removed 30 Oct)"],
+["Tiffany & Co. (LVMH)", "Digital Business Analyst – Omnichannel (EMEA)", "LVMH page dated 15 May 2025; JobLeads \"yesterday/today\" listings are re-indexes (same pattern seen for Bulgari CRM Manager, LVMH page Jun 2025, and Puig CRM Manager, filled) (checked 28 Oct)"],
+["Blue Light Card", "AI Adoption Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Bloomberg", "AI Enablement Lead, External Relations", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Legora", "AI Enablement Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Cint", "AI Workflow Transformation Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Rothschild & Co", "AI Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["HM Revenue & Customs", "Operating Model Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Storio group", "Insight Lead (Customer Experience)", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["PwC UK", "Analytics Delivery Lead – Real Estate and FM - Senior Manager", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Moody's Corporation", "Assc Dir Mgr-Data Analytics", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Gilead Sciences", "Assoc Director, Integrated Insights, Established Products", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["dunnhumby", "Client Success Senior Lead (Media)", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["British Business Bank", "Associate Director – Analytics, AI and Automation (maternity cover)", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Accenture", "Anthropic Strategy & Ecosystem Growth - Senior Manager", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["CHANEL", "Head of Internal Communications and Transformation", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["dunnhumby", "Client Success Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Myn", "AI Enablement Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Pictet Group", "Distribution Change & Adoption Lead (12-month FTC)", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["EY-Parthenon", "Assistant Director - Tech - Strategy and Execution", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["IG Group", "Operations Analytics and Insight Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Global University Systems", "Data Reporting and Analytics Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Michael Page", "People and Change Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["EY-Parthenon", "Assistant Director - Operational Decision Intelligence", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Banijay Entertainment", "AI Adoption & Enablement Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Sky", "Reporting and Data Visualisation Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["EY", "Frontier AI Assistant Director", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Capgemini", "AI Lead – Data & Agentic AI Foundations", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["CBRE", "Global AI, Technology, and Innovation Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Morgan Hunt", "Data Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Turner & Townsend", "P3M Data & Reporting Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["EY", "Strategy Execution Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["CreateFuture", "Lead Strategy & Transformation Consultant", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Numan", "Growth CRM Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["The Growth Foundation", "CRM & Retention Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Harnham", "Lead Analytics Consultant", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Louis Vuitton (LVMH)", "In-Store Clienteling Director (aka Client Development Manager)", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["n8n", "Internal AI Enablement Lead", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Google", "Google for Education Digital Transformation Lead, EMEA", "Whitney: Lead/Director/Head-level — underqualified (removed 28 Oct)"],
+["Capgemini Invent", "Product Manager (AI & Transformation) – Consultant / Senior Consultant", "posted 25 Sep — more than 30 days (checked 26 Oct)"],
+["Capgemini Invent", "ServiceNow CRM Transformation Lead – Managing Consultant", "posted 23 Sep — more than 30 days (checked 24 Oct)"],
+["Deloitte Digital", "Senior Consultant, Salesforce Data Cloud and Agentforce", "posted ~23 Sep; Glassdoor shows 30d+ (checked 24 Oct)"],
+["KPMG UK", "Data & Analytics Implementation Assistant Manager – Tax Technology & Innovation", "KPMG ref no. suggests posted mid-2026 (checked 23 Oct)"],
+["Amazon", "Senior Business Intelligence Engineer, UK Insights and Innovation", "posted 27 Jun (checked 23 Oct)"],
+["Salesforce", "Customer Success Manager, Senior Manager", "no London posting found (23 Oct); Glassdoor listing dated 22 Sep, no longer accepting applications (checked 24 Oct)"],
+["Ralph Lauren", "CRM Manager, EMEA CIX", "on Glassdoor 30d+; no date found (checked 23 Oct)"],
+["Accenture", "Data & AI Strategy – Consultant", "Flexa first listed ~16 Jul (checked 23 Oct)"],
+["Deloitte Digital", "Manager, Salesforce Data Cloud and Agentforce", "30d+ old (checked 23 Oct)"],
+["Accenture", "HR Transformation Consultant (CL9)", "Flexa first listed ~11 Apr (checked 23 Oct)"],
+["Meta", "Product Growth Analyst", "posted ~7 Aug (checked 23 Oct)"],
+["KPMG UK", "AI Assistant Consultant – Tax Technology & Innovation", "advertised 9 Feb; closing date 11 Mar passed (checked 23 Oct)"],
+["KPMG UK", "Senior Data Analyst – Tax Technology & Innovation", "KPMG ref no. suggests older than 1 month; a matching KPMG page says filled (checked 23 Oct)"],
+["PwC UK", "Data Analyst – Senior Associate", "posted ~7 Sep (checked 23 Oct)"],
+["n8n", "Deployment Strategist (Remote, Europe)", "posted 1 Jul; no longer accepting applications (checked 23 Oct)"],
+["KPMG UK", "Manager, People Transformation Change Manager", "posted 17 Apr (checked 23 Oct)"],
+["KPMG UK", "Technology Change Manager (12-month FTC)", "KPMG ref no. older than Feb 2026 (checked 23 Oct)"],
+["Capgemini Invent", "Programme and Change Acceleration Consultant", "posted 2 Apr (checked 23 Oct)"],
+["Kering", "CRM & Data Manager", "no date; mirror says expires soon; not on Kering site (checked 23 Oct)"],
+["PwC UK", "Customer Transformation Manager – Government and Public Sector", "30d+ old; no date (checked 23 Oct)"],
+["Anthropic", "Technical Deployment Lead", "posted 20 Aug (checked 23 Oct)"],
+["Ralph Lauren", "Data Analyst, Digital Commerce, EMEA & LATAM", "mirror says closed 18 Oct (checked 23 Oct)"],
+["Ralph Lauren", "Senior CRM CX Associate, CIX EMEA", "no posting found under this title (checked 23 Oct)"],
+["Accenture", "Transformation Change Consultant (CL9)", "Flexa says \"no longer available\"; Workday page empty (checked 22 Oct)"],
+["Burberry", "CRM Data Analyst (Maternity Cover)", "Burberry careers page says \"position has been filled\" (checked 22 Oct)"],
+["Amazon", "Tax Data Analyst, Global Tax Services", "mirror says closed 21 Sep (checked 22 Oct)"],
+["n8n", "Strategic Customer Experience & Success Programs Manager", "mirrors say expired (checked 22 Oct)"],
+["Burberry", "APP Data Analyst", "Burberry careers page shows filled (checked 22 Oct)"]
+];
+
+const CATS=["All","New today","AI adoption","Change/Transformation","Data/BI","CRM","Customer success"];
+let cat="All";
+const $=id=>document.getElementById(id);
+
+function salClass(r){
+  const s=r[5], n=r[6].toLowerCase();
+  if(s==="n/a") return "na";
+  if(n.includes("below")) return "below";
+  if(n.includes("above")) return "above";
+  return "in";
+}
+function isLinkedIn(r){return r[8].includes("linkedin.com")}
+// Industry is matched from the company name (first match wins); unknown companies fall into "Other".
+const INDUSTRIES=[
+ ["Recruitment agency",["harnham","robert walters","morgan hunt","michael page","hunter bond","tria","proactive.it","langley james","panoramic associates"]],
+ ["Jewellery & watches",["cartier","van cleef","tiffany","bulgari","rolex","omega","tag heuer","jaeger-lecoultre","tissot","longines"]],
+ ["Beauty",["l'oréal","l'oreal","lancôme","lancome","estée lauder","estee lauder","charlotte tilbury","shiseido","coty","puig","sephora","guerlain","sk-ii","clé de peau","e.l.f","jo malone"]],
+ ["Luxury cars",["porsche","ferrari","lamborghini","rolls-royce","bentley","aston martin"]],
+ ["Luxury fashion & retail",["chanel","hermès","hermes","louis vuitton","dior","gucci","prada","miu miu","burberry","mulberry","ralph lauren","harrods","selfridges","kering","saint laurent","mcqueen","balenciaga","lvmh","richemont","dunhill","mr porter","ynap","net-a-porter","tapestry","coach","armani","moncler","givenchy","dolce","valentino","bottega","celine","zegna","fendi","ferragamo","loewe","kenzo","montblanc"]],
+ ["Hospitality & travel",["shangri-la","intercontinental","ritz-carlton","moët","veuve","soho house","hx expeditions","flight centre"]],
+ ["Consulting",["accenture","capgemini","pwc","deloitte","kpmg","ey","boston consulting","bcg","baringa","north highland","pa consulting","fti consulting","moorhouse","keystone","credera","grant thornton","expleo","roberts group","vantage point","solvex","turner & townsend","jacobs","sagacity","akkodis","cbre"]],
+ ["Finance & insurance",["natwest","handelsbanken","wise","jefferies","schroders","janus henderson","northern trust","fitch","dtcc","global payments","sumup","m-kopa","gb bank","british business bank","legal & general","zurich","sompo","sedgwick","duck creek","ig group","moody","rothschild","better collective","forter","csc"]],
+ ["Public sector, health & education",["council","nhs","royal college","lse","university","hm revenue","takeda","haleon","gilead","the football association","multiverse"]],
+ ["Media & marketing",["sky","crunchyroll","universal music","sony","square enix","global","banijay","bloomberg","omd","dept","vccp","skai","statista"]],
+ ["Retail & consumer brands",["cos","asos","sainsbury","john lewis","lindt","nestlé","nespresso","sharkninja","lego","casio","canon","fender","bulk","itsu","unidays","hertz","blue light card","storio"]],
+ ["AI, tech & software",["anthropic","openai","n8n","salesforce","microsoft","google","amazon","aws","meta","apple","bytedance","cognition","databricks","thoughtspot","servicenow","zendesk","atlassian","figma","mixpanel","hightouch","synthesia","hebbia","distyl","didero","a.team","attio","askable","avolution","box","cloudbees","luware","kota","hibob","modash","klaviyo","rackspace","sas","prolific","predictx","navex","nice","rldatix","dot compliance","didomi","juicebox","bionic","legora","cint","accurx","lottie","station f","techtree","bell integration"]],
+ ["Energy & telecom",["shell","vodafone","vodafonethree","bt group","kraken","the electric car scheme"]]
+];
+function kw(c,k){const e=k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");return new RegExp("(^|[^a-z0-9])"+e+"([^a-z0-9]|$)").test(c)}
+const indCache={};
+function industryOf(co){if(co in indCache) return indCache[co];const c=co.toLowerCase();let res="Other";
+  for(const [g,keys] of INDUSTRIES) if(keys.some(k=>kw(c,k))){res=g;break}
+  return indCache[co]=res;}
+function fmt(d){const [y,m,dd]=d.split("-");return dd+"/"+m}
+// Posting date comes from the fit note ("Posted 15 Oct", "Reposted ~13 Oct") or, for LinkedIn rows posted within 24h, the first-seen date. Rows with no date only show under "Any time".
+const MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+const postCache={};
+function postedOf(r){const k=r[2]+"|"+r[3]+"|"+r[0]; if(k in postCache) return postCache[k];
+  let d=null; const n=r[6];
+  if(/Posted within 24h of first seen/i.test(n)) d=new Date(r[0]+"T00:00:00");
+  else {const m=n.match(/(?:Re)?[Pp]osted\s+~?(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/);
+    if(m){const ref=new Date(r[0]+"T00:00:00");let y=ref.getFullYear();const mo=MON[m[2].toLowerCase()];
+      if(mo>ref.getMonth()+1) y--; d=new Date(y,mo,+m[1]);}}
+  return postCache[k]=d;}
+function daysAgo(d){const t=new Date();t.setHours(0,0,0,0);return Math.round((t-d)/864e5);}
+function fmtD(d){return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+// Only roles with a known posting date within the last 30 days are shown; the rest are listed under "Hidden".
+const MAX_AGE=30;
+const SHOWN=ROLES.filter(r=>{const d=postedOf(r);return d && daysAgo(d)<=MAX_AGE});
+const HIDDEN=ROLES.filter(r=>!SHOWN.includes(r));
+
+function render(){
+  const q=$("q").value.trim().toLowerCase(), sal=$("sal").value, src=$("src").value, co=$("co").value||"all", ind=$("ind").value||"all", post=$("post").value||"any";
+  const rows=SHOWN.filter(r=>{
+    if(cat==="New today" && r[0]!==TODAY) return false;
+    if(cat!=="All" && cat!=="New today" && r[4]!==cat) return false;
+    const sc=salClass(r);
+    if(sal==="in" && sc!=="in") return false;
+    if(sal==="notbelow" && sc==="below") return false;
+    if(sal==="listed" && sc==="na") return false;
+    if(src==="linkedin" && !isLinkedIn(r)) return false;
+    if(src==="career" && isLinkedIn(r)) return false;
+    if(sal==="above" && sc!=="above") return false;
+    if(ind!=="all" && industryOf(r[2])!==ind) return false;
+    if(post!=="any"){const pd=postedOf(r); if(!pd || daysAgo(pd)>+post) return false;}
+    if(co.startsWith("c:") && r[2]!==co.slice(2)) return false;
+    if(q && !(r[2]+" "+r[3]+" "+r[6]).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  $("count").textContent=rows.length+" of "+SHOWN.length+" roles";
+  $("list").innerHTML=rows.length?rows.map(r=>{
+    const sc=salClass(r), label=r[7]==="A"?"Apply":r[7]==="M"?"Posting (mirror)":"Search page";
+    return `<article class="card">
+      <div class="top"><div style="min-width:0"><div class="co">${esc(r[2])}</div><h2 class="role">${esc(r[3])}</h2></div>${r[0]===TODAY?'<span class="new">New</span>':""}</div>
+      <div class="tags"><span class="tag">${esc(r[4])}</span><span class="sal ${sc}">${sc==="na"?"Salary n/a":esc(r[5])}</span></div>
+      <p class="note">${esc(r[6].replace(/^⚠️\s*/,""))}</p>
+      <div class="foot"><span class="dates">${postedOf(r)?"posted "+fmtD(postedOf(r))+" · ":""}first ${fmt(r[0])} · last seen ${fmt(r[1])}${isLinkedIn(r)?" · LinkedIn":""}</span>
+      <a class="apply${r[7]==="A"?"":" weak"}" href="${esc(r[8])}" target="_blank" rel="noopener">${label}</a></div>
+    </article>`}).join(""):'<div class="empty">No roles match these filters. Try clearing the search or picking "All".</div>';
+}
+
+$("chips").innerHTML=CATS.map(c=>{
+  const n=c==="All"?SHOWN.length:c==="New today"?SHOWN.filter(r=>r[0]===TODAY).length:SHOWN.filter(r=>r[4]===c).length;
+  return `<button class="chip" type="button" data-c="${c}" aria-pressed="${c===cat}">${c} · ${n}</button>`}).join("");
+$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;cat=b.dataset.c;
+  document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x.dataset.c===cat));render()});
+function fillCo(){
+  const cnt={},ic={};
+  SHOWN.forEach(r=>{cnt[r[2]]=(cnt[r[2]]||0)+1;const g=industryOf(r[2]);ic[g]=(ic[g]||0)+1});
+  const gs=INDUSTRIES.map(g=>g[0]).concat("Other");
+  $("ind").innerHTML='<option value="all">All industries · '+SHOWN.length+'</option>'+gs.filter(g=>ic[g]).map(g=>`<option value="${esc(g)}">${esc(g)} · ${ic[g]}</option>`).join("");
+  let h='<option value="all">All companies · '+Object.keys(cnt).length+'</option>';
+  gs.forEach(g=>{const cos=Object.keys(cnt).filter(c=>industryOf(c)===g).sort((a,b)=>a.localeCompare(b));
+    if(cos.length) h+=`<optgroup label="${esc(g)}">`+cos.map(c=>`<option value="c:${esc(c)}">${esc(c)} · ${cnt[c]}</option>`).join("")+'</optgroup>';});
+  $("co").innerHTML=h;}
+fillCo();
+["q","sal","src","co","ind","post"].forEach(id=>{$(id).addEventListener("input",render);$(id).addEventListener("change",render)});
+$("reset").addEventListener("click",()=>{$("q").value="";$("sal").value="all";$("src").value="all";$("co").value="all";$("ind").value="all";$("post").value="any";cat="All";
+  document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x.dataset.c===cat));render()});
+
+const inRange=SHOWN.filter(r=>salClass(r)==="in").length;
+$("stats").innerHTML=`<span class="stat"><b>${SHOWN.length}</b>open</span><span class="stat"><b>${SHOWN.filter(r=>r[0]===TODAY).length}</b>new today</span><span class="stat"><b>${inRange}</b>salary in range</span><span class="stat"><b>${APPLIED.length}</b>applied</span><span class="stat"><b>${REMOVED.length}</b>removed</span>`;
+$("apSum").textContent="Applied · "+APPLIED.length;
+$("ap").innerHTML=APPLIED.map(r=>`<li><b>${esc(r[0])}</b> — ${esc(r[1])} <span>· ${esc(r[2])}</span></li>`).join("");
+$("hdSum").textContent="Hidden · "+HIDDEN.length+" (no posting date found, or posted more than a month ago)";
+$("hd").innerHTML=HIDDEN.map(r=>{const d=postedOf(r);return `<li><b>${esc(r[2])}</b> — <a href="${esc(r[8])}" target="_blank" rel="noopener">${esc(r[3])}</a> <span>· ${d?"posted "+fmtD(d):"no posting date"}</span></li>`}).join("");
+$("rmSum").textContent="Removed roles · "+REMOVED.length+" (expired or posted over a month ago)";
+$("rm").innerHTML=REMOVED.map(r=>`<li><b>${esc(r[0])}</b> — ${esc(r[1])} <span>· ${esc(r[2])}</span></li>`).join("");
+render();
+</script>
+</body>
+</html>
